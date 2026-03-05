@@ -1,48 +1,104 @@
-targetScope = 'subscription'
-
-/*** PARAMETERS ***/
-param resourceGroupName string = 'rg-dataengine-test'
 param location string = 'eastus'
+param addressPrefix string = '10.0.0.0/24'
+param namePrefix string = 'assessment'
 
-
-/*** RESOURCE GROUP ***/
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
-  name: resourceGroupName
+// NSG
+resource nsg 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
+  name: '${namePrefix}-nsg'
   location: location
-}
-
-/**** Virtual Network Security Group ***/
-module nsg 'modules/nsg.bicep' = {
-  name: 'test-nsg'
-  scope: resourceGroup
-  params: {
-    location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowSubnetInBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: addressPrefix
+          destinationPortRange: '*'
+          destinationAddressPrefix: addressPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'DenyAllInBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'AllowSubnetOutBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: addressPrefix
+          destinationPortRange: '*'
+          destinationAddressPrefix: addressPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
   }
 }
 
-/**** Virtual Network ***/
+// VNet
 module vnet 'modules/network.bicep' = {
-  name: 'test-vnet'
-  scope: resourceGroup
+  name: '${namePrefix}-vnet'
   params: {
     location: location
-    nsgId: nsg.outputs.nsgId
+    nsgId: nsg.id
+    namePrefix: namePrefix
+    addressPrefix: addressPrefix
   }
 }
 
-/**** Storage Account ***/
-module sa 'modules/storage.bicep' = {
-  name: 'test-sa'
-  scope: resourceGroup
-  params: {
-    vnetId: vnet.outputs.vnetId
-    location: location
-
+// Storage
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+  name: '${namePrefix}-sa'
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    supportsHttpsTrafficOnly: true
+    accessTier: 'Hot'
+    networkAcls: {
+      defaultAction: 'Deny'
+      virtualNetworkRules: [
+        {
+          id: '${vnet.outputs.vnetId}/subnets/defaultSubnet'
+          action: 'Allow'
+        }
+      ]
+    }
   }
 }
 
-
-output saName string = sa.outputs.storageAccountName
-output saId string = sa.outputs.storageAccountId
+output saName string = storageAccount.name
+output saId string = storageAccount.id
 output subnetId string = '${vnet.outputs.vnetId}/subnets/defaultSubnet'
-output nsgId string = nsg.outputs.nsgId
+output nsgId string = nsg.id

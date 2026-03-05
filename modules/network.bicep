@@ -1,13 +1,15 @@
 param location string
 param nsgId string
+param namePrefix string
+param addressPrefix string
 
-resource testvnet 'Microsoft.Network/virtualNetworks@2022-01-01' = {
-  name: 'test-vnet'
+resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' = {
+  name: '${namePrefix}-vnet'
   location: location
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.0.0.0/24'
+        addressPrefix
       ]
     }
     subnets: [
@@ -17,11 +19,11 @@ resource testvnet 'Microsoft.Network/virtualNetworks@2022-01-01' = {
           networkSecurityGroup: {
             id: nsgId
           }
-          addressPrefix: '10.0.0.0/24'
+          addressPrefix: addressPrefix
         }
       }
     ]
   }
 }
 
-output vnetId string = testvnet.id
+output vnetId string = vnet.id
