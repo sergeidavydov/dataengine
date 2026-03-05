@@ -8,10 +8,124 @@ Note
 
 1. az bicep lint -f main.bicep
 
-   > empty output
+   > output is empty
 
-2. az deployment group create --resource-group 'AssessmentRG' --template-file https://github.com/sergeidavydov/dataengine/blob/main/main.bicep --what-if
+2. az deployment group create --resource-group 'AssessmentRG' --template-file main.bicep --what-if
+
    > output
+
+   ```
+    ~  az deployment group create --resource-group 'AssessmentRG' --template-file 'main.bicep' --what-if
+    Note: The result may contain false positive predictions (noise).
+    You can help us improve the accuracy of the result by opening an issue here: https://aka.ms/WhatIfIssues
+
+    Resource and property changes are indicated with this symbol:
+    + Create
+
+    The deployment will update the following scope:
+
+    Scope: /subscriptions/subscriptionId/resourceGroups/AssessmentRG
+
+    + Microsoft.Network/networkSecurityGroups/assessment-nsg [2022-07-01]
+
+      apiVersion:  "2022-07-01"
+      id:          "/subscriptions/subscriptionId/resourceGroups/AssessmentRG/providers/Microsoft.Network/networkSecurityGroups/assessment-nsg"
+      location:    "eastus"
+      name:        "assessment-nsg"
+      properties.securityRules: [
+        0:
+
+          name:                                "AllowSubnetInBound"
+          properties.access:                   "Allow"
+          properties.destinationAddressPrefix: "10.0.0.0/24"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Inbound"
+          properties.priority:                 100
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "10.0.0.0/24"
+          properties.sourcePortRange:          "*"
+
+        1:
+
+          name:                                "AllowSubnetOutBound"
+          properties.access:                   "Allow"
+          properties.destinationAddressPrefix: "10.0.0.0/24"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Outbound"
+          properties.priority:                 100
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "10.0.0.0/24"
+          properties.sourcePortRange:          "*"
+
+        2:
+
+          name:                                "DenyAllInBound"
+          properties.access:                   "Deny"
+          properties.destinationAddressPrefix: "*"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Inbound"
+          properties.priority:                 1000
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "*"
+          properties.sourcePortRange:          "*"
+
+        3:
+
+          name:                                "DenyAllOutBound"
+          properties.access:                   "Deny"
+          properties.destinationAddressPrefix: "*"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Outbound"
+          properties.priority:                 1000
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "*"
+          properties.sourcePortRange:          "*"
+
+      ]
+      type:        "Microsoft.Network/networkSecurityGroups"
+
+    + Microsoft.Network/virtualNetworks/assessment-vnet [2022-01-01]
+
+      apiVersion:               "2022-01-01"
+      id:                       "/subscriptions/subscriptionId/resourceGroups/AssessmentRG/providers/Microsoft.Network/virtualNetworks/assessment-vnet"
+      location:                 "eastus"
+      name:                     "assessment-vnet"
+      properties.addressSpace.addressPrefixes: [
+        0: "10.0.0.0/24"
+      ]
+      properties.subnets: [
+        0:
+
+          name:                               "defaultSubnet"
+          properties.addressPrefix:           "10.0.0.0/24"
+          properties.networkSecurityGroup.id: "/subscriptions/subscriptionId/resourceGroups/AssessmentRG/providers/Microsoft.Network/networkSecurityGroups/assessment-nsg"
+
+      ]
+      type:                     "Microsoft.Network/virtualNetworks"
+
+    + Microsoft.Storage/storageAccounts/assessmentsa42 [2021-04-01]
+
+      apiVersion:                           "2021-04-01"
+      id:                                   "/subscriptions/subscriptionId/resourceGroups/AssessmentRG/providers/Microsoft.Storage/storageAccounts/assessmentsa42"
+      kind:                                 "StorageV2"
+      location:                             "eastus"
+      name:                                 "assessmentsa42"
+      properties.accessTier:                "Hot"
+      properties.minimumTlsVersion:         "TLS1_2"
+      properties.networkAcls.defaultAction: "Deny"
+      properties.networkAcls.virtualNetworkRules: [
+        0:
+
+          action: "Allow"
+          id:     "/subscriptions/subscriptionId/resourceGroups/AssessmentRG/providers/Microsoft.Network/virtualNetworks/assessment-vnet/subnets/defaultSubnet"
+
+      ]
+      properties.supportsHttpsTrafficOnly:  true
+      sku.name:                             "Standard_LRS"
+      type:                                 "Microsoft.Storage/storageAccounts"
+
+    Resource changes: 3 to create.
+   ```
 
 ## RBAC design
 

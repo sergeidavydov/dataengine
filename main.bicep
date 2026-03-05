@@ -77,7 +77,7 @@ module vnet 'modules/network.bicep' = {
 
 // Storage
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
-  name: '${namePrefix}-sa'
+  name: '${namePrefix}sa42'
   location: location
   kind: 'StorageV2'
   sku: {
@@ -85,7 +85,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
   properties: {
     supportsHttpsTrafficOnly: true
-    accessTier: 'Hot'
     networkAcls: {
       defaultAction: 'Deny'
       virtualNetworkRules: [
